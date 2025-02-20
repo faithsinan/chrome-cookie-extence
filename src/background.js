@@ -18,7 +18,7 @@ function init() {
     addMessageListener()
     //添加请求监听器
     addRequestListener()
-    chrome.storage.local.set({superCookieList: ''});
+
     chrome.storage.local.get(['superCookieList'], (result) => {
         if (!result.superCookieList) {
             let defaultList = ['localhost', '.baidu.com', 'www.baidu.com']
