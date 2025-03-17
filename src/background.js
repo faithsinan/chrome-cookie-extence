@@ -5,7 +5,9 @@ const state = {
     cookieStr: '', //用于校验相同cookie
     cookieMap: null, //存储cookie的domain映射
     autoCompleteStatus: true,
-    superCookieList: [], //cookie超级强制替换
+    superCookieList: [], //cookie超级强制替换，
+
+    CORSCookies: [], // 跨站单向 cookie 共享列表
 }
 
 init()
@@ -19,13 +21,14 @@ function init() {
     //添加请求监听器
     addRequestListener()
 
-    chrome.storage.local.get(['superCookieList'], (result) => {
+    chrome.storage.local.get(['superCookieList', 'CORSCookies'], (result) => {
         if (!result.superCookieList) {
             let defaultList = ['localhost', '.baidu.com', 'www.baidu.com']
             chrome.storage.local.set({superCookieList: defaultList});
             state.superCookieList = defaultList
         } else {
             state.superCookieList = result.superCookieList || []
+            state.CORSCookies = result.CORSCookies || []
         }
     });
 }
@@ -84,6 +87,14 @@ function addMessageListener() {
                 success: true,
                 autoCompleteStatus: state.autoCompleteStatus
             })
+        } else if (request.type === 'setCORSCookies') {
+            if (request.CORSCookies) {
+                state.CORSCookies = request.CORSCookies
+                chrome.storage.local.set({CORSCookies: request.CORSCookies});
+            }
+            sendResponse({
+                success: true,
+            })
         }
     });
 }
@@ -106,6 +117,14 @@ function setCookie(details) {
     for (let i = 0; i < state.superCookieList.length; i++) {
         if (details.url?.includes(state.superCookieList[i])) {
             let newCookie = state.cookieMap.get(state.superCookieList[i])
+
+            if (state.CORSCookies.length) {
+                const cors = state.CORSCookies.find(item => item.end === state.superCookieList[i])
+                if (cors) {
+                    newCookie = state.cookieMap.get(cors.start)
+                }
+            }
+
             if (!newCookie) {
                 newCookie = state.cookieMap.get('/')
             }
