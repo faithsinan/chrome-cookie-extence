@@ -13,14 +13,14 @@ export default class CookieCarrier extends Component {
         superCookieList: [],
         CORSCookies: [],
 
-        tempCORSCookie: { start: '', end: '' }
+        tempCORSCookie: { origin: '', target: '' }
     }
 
     componentDidMount() {
         this.setCookieStatus()
         chrome.storage.local.get(['superCookieList', 'CORSCookies'], (result) => {
             console.log(result)
-            this.setState({superCookieList:result.superCookieList||[], CORSCookies: result.CORSCookies})
+            this.setState({superCookieList:result.superCookieList || [], CORSCookies: result.CORSCookies || []})
         })
     }
 
@@ -105,7 +105,7 @@ export default class CookieCarrier extends Component {
                                     {
                                         CORSCookies.map((item, index) => {
                                             return <div>
-                                                <span>{item.start}</span> 至 <span>{item.end}</span>
+                                                <span>{item.origin}</span> 至 <span>{item.target}</span>
                                                 <span className='CookieCarrier-delete'
                                                     onClick={() => {
                                                         CORSCookies.splice(index, 1)
@@ -118,26 +118,26 @@ export default class CookieCarrier extends Component {
                                     }
 
                                     <div style={{display: 'flex', alignItems: 'center'}}>
-                                        <Input value={tempCORSCookie.start}
+                                        <Input value={tempCORSCookie.origin}
                                         style={{width: '130px', height: '28px'}}
                                         onChange={(e) => {
-                                            this.setState({tempCORSCookie: { ...tempCORSCookie, start: e.target.value }})
+                                            this.setState({tempCORSCookie: { ...tempCORSCookie, origin: e.target.value }})
                                         }}
                                         />
 
                                         <span style={{margin: '0 4px'}}>至</span>
 
-                                        <Input value={tempCORSCookie.end}
+                                        <Input value={tempCORSCookie.target}
                                         style={{width: '130px', height: '28px'}}
                                         onChange={(e) => {
-                                            this.setState({tempCORSCookie: { ...tempCORSCookie, end: e.target.value }})
+                                            this.setState({tempCORSCookie: { ...tempCORSCookie, target: e.target.value }})
                                         }}
                                         />
                                         
                                         <CheckOutlined className='CookieCarrier-confirm'
                                             onClick={() => {
                                                 CORSCookies.push(tempCORSCookie)
-                                                this.setState({CORSCookies, tempCORSCookie: { start: '', end: '' }},()=>{
+                                                this.setState({CORSCookies, tempCORSCookie: { origin: '', target: '' }},()=>{
                                                     this.setCORSCookie(CORSCookies)
                                                 })
                                             }}

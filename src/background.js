@@ -45,7 +45,7 @@ function updateCookie() {
 function storeCookie(cookie) {
     //cookie更新校验
     if (state.cookieStr === JSON.stringify(cookie)) {
-        console.log('cookie缓存未更新')
+        // console.log('cookie缓存未更新')
         return
     }
     state.cookieStr = JSON.stringify(cookie)
@@ -56,8 +56,8 @@ function storeCookie(cookie) {
         newCookieMap.set(item.domain, str)
     })
     state.cookieMap = newCookieMap
-    console.log('cookie缓存已更新')
-    console.log(cookie)
+    // console.log('cookie缓存已更新')
+    // console.log(cookie)
 }
 
 function addMessageListener() {
@@ -112,27 +112,32 @@ function setCookie(details) {
         return
     }
     updateCookie()
+
+    for (let i = 0; i < state.CORSCookies.length; i++) {
+        if (details.url?.includes(state.CORSCookies[i].target)) {
+            let newCookie = state.cookieMap.get(state.CORSCookies[i].origin)            
+            if (!newCookie) {
+                newCookie = state.cookieMap.get('/')
+            }
+            details.requestHeaders.push({name: 'Cookie', value: newCookie})
+            return {requestHeaders: details.requestHeaders}
+        }
+    }
+
     //网盘和谷歌商城存在验证问题
     let forbiddenList = ['baidu', 'google', 'gitlab', 'mfp', 'mail.qq', 'csdn', 'cnblogs']
     for (let i = 0; i < state.superCookieList.length; i++) {
         if (details.url?.includes(state.superCookieList[i])) {
             let newCookie = state.cookieMap.get(state.superCookieList[i])
-
-            if (state.CORSCookies.length) {
-                const cors = state.CORSCookies.find(item => item.end === state.superCookieList[i])
-                if (cors) {
-                    newCookie = state.cookieMap.get(cors.start)
-                }
-            }
-
             if (!newCookie) {
                 newCookie = state.cookieMap.get('/')
             }
             details.requestHeaders.push({name: 'Cookie', value: newCookie})
-            console.log('强制携带cookie成功:' + details.url + ' cookie为' + newCookie)
+            // console.log('强制携带cookie成功:' + details.url + ' cookie为' + newCookie)
             return {requestHeaders: details.requestHeaders}
         }
     }
+
     for (let i = 0; i < forbiddenList.length; i++) {
         if (details.url?.includes(forbiddenList[i])) {
             return
@@ -141,15 +146,15 @@ function setCookie(details) {
     //如果已经有cookie，return
     for (let i = details.requestHeaders.length - 1; i >= 0; i--) {
         if (details.requestHeaders[i].name === 'Cookie') {
-            console.log('无需添加cookie:' + details.url)
+            // console.log('无需添加cookie:' + details.url)
             return
         }
     }
     const url_to_domain_reg = /:\/\/.*?\//i
     const domain_to_subdomain_reg = /\.([a-z0-9-])+\.[a-z]+(:[0-9]*)?/g
     if (!details.url) {
-        console.log(details + '本次未成功携带Cookie，请确认该请求是否需要携带Cookie' + details.url)
-        console.log('若需要，请联系@chirpmonster')
+        // console.log(details + '本次未成功携带Cookie，请确认该请求是否需要携带Cookie' + details.url)
+        // console.log('若需要，请联系@chirpmonster')
         return
     }
     let domain = details.url.match(url_to_domain_reg)?.[0] ?? details.url //正则获取domain或者保底
@@ -170,7 +175,7 @@ function setCookie(details) {
         newCookie = state.cookieMap.get('/')
     }
     details.requestHeaders.push({name: 'Cookie', value: newCookie})
-    console.log('成功携带cookie:' + details.url + ' cookie为' + newCookie)
+    // console.log('成功携带cookie:' + details.url + ' cookie为' + newCookie)
     return {requestHeaders: details.requestHeaders}
 }
 
