@@ -10,14 +10,17 @@ export default class CookieCarrier extends Component {
     state = {
         cookieStatus: null,
         getStatus: false,
-        superCookieList: []
+        superCookieList: [],
+        CORSCookies: [],
+
+        tempCORSCookie: { origin: '', target: '' }
     }
 
     componentDidMount() {
         this.setCookieStatus()
-        chrome.storage.local.get(['superCookieList'], (result) => {
+        chrome.storage.local.get(['superCookieList', 'CORSCookies'], (result) => {
             console.log(result)
-            this.setState({superCookieList:result.superCookieList||[]})
+            this.setState({superCookieList:result.superCookieList || [], CORSCookies: result.CORSCookies || []})
         })
     }
 
@@ -36,8 +39,22 @@ export default class CookieCarrier extends Component {
         );
     }
 
+    setCORSCookie = (CORSCookies = null) => {
+        chrome.runtime.sendMessage(
+            {
+                type: 'setCORSCookies',
+                CORSCookies
+            },
+            (res) => {
+                if (res.success) {
+                    
+                }
+            }
+        );
+    }
+
     render() {
-        let {cookieStatus, getStatus, superCookieList, tempCookie} = this.state;
+        let {cookieStatus, getStatus, superCookieList, tempCookie, CORSCookies, tempCORSCookie} = this.state;
         return [
             <div>
                 {
@@ -81,6 +98,53 @@ export default class CookieCarrier extends Component {
                                                    })
                                                }}
                                 />
+
+                                <div style={{marginTop: '10px'}}>
+                                    <div>跨站cookie共享：</div>
+
+                                    {
+                                        CORSCookies.map((item, index) => {
+                                            return <div>
+                                                <span>{item.origin}</span> 至 <span>{item.target}</span>
+                                                <span className='CookieCarrier-delete'
+                                                    onClick={() => {
+                                                        CORSCookies.splice(index, 1)
+                                                        this.setState({CORSCookies}, () => {
+                                                            this.setCORSCookie(CORSCookies)
+                                                        })
+                                                    }}>删除</span>
+                                            </div>
+                                        })
+                                    }
+
+                                    <div style={{display: 'flex', alignItems: 'center'}}>
+                                        <Input value={tempCORSCookie.origin}
+                                        style={{width: '130px', height: '28px'}}
+                                        onChange={(e) => {
+                                            this.setState({tempCORSCookie: { ...tempCORSCookie, origin: e.target.value }})
+                                        }}
+                                        />
+
+                                        <span style={{margin: '0 4px'}}>至</span>
+
+                                        <Input value={tempCORSCookie.target}
+                                        style={{width: '130px', height: '28px'}}
+                                        onChange={(e) => {
+                                            this.setState({tempCORSCookie: { ...tempCORSCookie, target: e.target.value }})
+                                        }}
+                                        />
+                                        
+                                        <CheckOutlined className='CookieCarrier-confirm'
+                                            onClick={() => {
+                                                CORSCookies.push(tempCORSCookie)
+                                                this.setState({CORSCookies, tempCORSCookie: { origin: '', target: '' }},()=>{
+                                                    this.setCORSCookie(CORSCookies)
+                                                })
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div style={{color:'darkgrey'}}>在哪里查看Domain？</div>
                                 <div style={{color:'darkgrey'}}>F12-Application-Cookie-Domain</div>
                             </div>
