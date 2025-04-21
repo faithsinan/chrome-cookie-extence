@@ -23,7 +23,7 @@ function init() {
 
     chrome.storage.local.get(['superCookieList', 'CORSCookies'], (result) => {
         if (!result.superCookieList) {
-            let defaultList = ['localhost', '.baidu.com', 'www.baidu.com']
+            let defaultList = ['localhost']
             chrome.storage.local.set({superCookieList: defaultList});
             state.superCookieList = defaultList
         } else {
